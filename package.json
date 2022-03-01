@@ -1,5 +1,5 @@
 {
-  "name": "vue-router",
+  "name": "@npkg/vue-router",
   "version": "1.0.0",
   "main": "dist/vue-router.cjs.js",
   "unpkg": "dist/vue-router.global.js",
