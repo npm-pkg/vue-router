@@ -1,86 +1,82 @@
-# vue-router-next [![release candidate](https://img.shields.io/npm/v/vue-router/next.svg)](https://www.npmjs.com/package/vue-router/v/next) [![CircleCI](https://badgen.net/circleci/github/vuejs/vue-router-next/master)](https://circleci.com/gh/vuejs/vue-router-next)
+# vue-router [![Build Status](https://img.shields.io/circleci/project/github/vuejs/vue-router/dev.svg)](https://circleci.com/gh/vuejs/vue-router)
 
-> This is the repository for Vue Router 4 (for Vue 3)
+> This is vue-router 3.0 Extended version which works only with Vue 2.0. For the 1.x router see the [1.0 branch](https://github.com/vuejs/vue-router/tree/1.0).
+> The extension supports automatic jump to external link
+### Introduction
 
-<h2 align="center">Supporting Vue Router</h2>
+`vue-router` is the official router for [Vue.js](http://vuejs.org). It deeply integrates with Vue.js core to make building Single Page Applications with Vue.js a breeze. Features include:
 
-Vue Router is part of the Vue Ecosystem and is an MIT-licensed open source project with its ongoing development made possible entirely by the support of Sponsors. If you would like to become a sponsor, please consider:
+- Nested route/view mapping
+- Modular, component-based router configuration
+- Route params, query, wildcards
+- View transition effects powered by Vue.js' transition system
+- Fine-grained navigation control
+- Links with automatic active CSS classes
+- HTML5 history mode or hash mode, with auto-fallback in IE9
+- Customizable Scroll Behavior
 
-- [Become a Sponsor on GitHub](https://github.com/sponsors/posva)
-- [One-time donation via PayPal](https://paypal.me/posva)
+Get started with the [documentation](http://router.vuejs.org), or play with the [examples](https://github.com/vuejs/vue-router/tree/dev/examples) (see how to run them below).
 
-<!-- <h3 align="center">Special Sponsors</h3> -->
-<!--special start-->
+### Development Setup
 
-<h4 align="center">Gold Sponsors</h4>
+``` bash
+# install deps
+npm install
 
-<p align="center">
-  <a href="https://passionatepeople.io" target="_blank" rel="noopener noreferrer">
-    <img src="https://img2.storyblok.com/672x0/filters::format(webp)/f/86387/x/21aa32ed18/logo-normal.svg" height=72px" alt="Passionate People">
-  </a>
+# build dist files
+npm run build
 
-  <a href="https://vuejobs.com/?utm_source=vuerouter&utm_campaign=sponsor" target="_blank" rel="noopener noreferrer">
-    <img src="docs/public/sponsors/vuejobs.png" height="72px" alt="VueJobs">
-  </a>
-</p>
+# serve examples at localhost:8080
+npm run dev
 
-<h4 align="center">Silver Sponsors</h4>
+# lint & run all tests
+npm test
 
-<p align="center">
-  <a href="https://www.vuemastery.com" target="_blank" rel="noopener noreferrer">
-    <img src="https://www.vuemastery.com/images/vuemastery.svg" height="42px" alt="Vue Mastery">
-  </a>
+# serve docs at localhost:8080
+npm run docs
+```
 
-  <a href="https://vuetifyjs.com" target="_blank" rel="noopener noreferrer">
-    <img src="https://cdn.vuetifyjs.com/docs/images/logos/vuetify-logo-light-text.svg" alt="Vuetify" height="42px">
-  </a>
+## Releasing
 
-  <a href="https://www.codestream.com/?utm_source=github&utm_campaign=vuerouter&utm_medium=banner" target="_blank" rel="noopener noreferrer">
-    <img src="https://alt-images.codestream.com/codestream_logo_vuerouter.png" alt="CodeStream" height="42px">
-  </a>
+- `yarn run release`
+  - Ensure tests are passing `yarn run test`
+  - Build dist files `VERSION=<the_version> yarn run build`
+  - Build changelog `yarn run changelog`
+  - Commit dist files `git add dist CHANGELOG.md && git commit -m "[build $VERSION]"`
+  - Publish a new version `npm version $VERSION --message "[release] $VERSION"
+  - Push tags `git push origin refs/tags/v$VERSION && git push`
+  - Publish to npm `npm publish`
 
-  <a href="https://birdeatsbug.com/?utm_source=vuerouter&utm_medium=sponsor&utm_campaign=silver" target="_blank" rel="noopener noreferrer">
-    <img src="https://static.birdeatsbug.com/general/bird-logotype-150x27.svg" alt="Bird Eats bug" height="42px">
-  </a>
-</p>
+## Questions
 
-<h4 align="center">Bronze Sponsors</h4>
+For questions and support please use the [Discord chat server](https://chat.vuejs.org) or [the official forum](http://forum.vuejs.org). The issue list of this repo is **exclusively** for bug reports and feature requests.
 
-<p align="center">
-  <a href="https://storyblok.com" target="_blank" rel="noopener noreferrer">
-    <img src="https://a.storyblok.com/f/51376/3856x824/fea44d52a9/colored-full.png" alt="Storyblok" height="32px">
-  </a>
+## Issues
 
-  <a href="https://nuxtjs.org" target="_blank" rel="noopener noreferrer">
-    <img src="https://nuxtjs.org/logos/nuxtjs-typo-white.svg" alt="NuxtJS" height="26px">
-  </a>
-</p>
+Please make sure to read the [Issue Reporting Checklist](https://github.com/vuejs/vue/blob/dev/.github/CONTRIBUTING.md#issue-reporting-guidelines) before opening an issue. Issues not conforming to the guidelines may be closed immediately.
 
----
+## Contribution
 
-Get started with the [documentation](https://next.router.vuejs.org).
+Please make sure to read the [Contributing Guide](https://github.com/vuejs/vue/blob/dev/.github/CONTRIBUTING.md) before making a pull request.
 
-## Quickstart
+## Changelog
 
-- Via CDN: `<script src="https://unpkg.com/vue-router@4"></script>`
-- In-browser playground on [CodeSandbox](https://codesandbox.io/s/vue-router-4-reproduction-hb9lh)
-- Add it to an existing Vue Project:
-  ```bash
-  npm install vue-router@4
-  ```
+Details changes for each release are documented in the [release notes](https://github.com/vuejs/vue-router/releases).
 
-## Changes from Vue Router 3
+## Stay In Touch
 
-Please consult the [Migration Guide](https://next.router.vuejs.org/guide/migration/).
+- For latest releases and announcements, follow on Twitter: [@vuejs](https://twitter.com/vuejs)
 
-## Contributing
+## License
 
-See [Contributing Guide](https://github.com/vuejs/vue-router-next/blob/master/.github/contributing.md).
+[MIT](http://opensource.org/licenses/MIT)
+
+Copyright (c) 2013-present Evan You
 
 ## Special Thanks
 
 <a href="https://www.browserstack.com">
-  <img src="https://github.com/vuejs/vue-router/raw/dev/assets/browserstack-logo-600x315.png" height="80" title="BrowserStack Logo" alt="BrowserStack Logo" />
+  <img src="/assets/browserstack-logo-600x315.png" height="80" title="BrowserStack Logo" alt="BrowserStack Logo" />
 </a>
 
 Special thanks to [BrowserStack](https://www.browserstack.com) for letting the maintainers use their service to debug browser specific issues.
