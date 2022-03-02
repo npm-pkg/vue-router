@@ -1,6 +1,6 @@
 {
   "name": "@npkg/vue-router",
-  "version": "0.0.2",
+  "version": "3.1.1",
   "main": "dist/vue-router.common.js",
   "module": "dist/vue-router.esm.js",
   "unpkg": "dist/vue-router.js",
