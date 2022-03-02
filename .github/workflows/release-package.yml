@@ -1,9 +1,9 @@
-name: test Package
+name: v3.1.1 Package
 
 on:
   push:
     branches:
-      - main
+      - v3.1.1
 
 jobs:
   publish-npm:
