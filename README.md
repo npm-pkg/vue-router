@@ -1,7 +1,7 @@
 # vue-router-next [![release candidate](https://img.shields.io/npm/v/vue-router/next.svg)](https://www.npmjs.com/package/vue-router/v/next) [![CircleCI](https://badgen.net/circleci/github/vuejs/vue-router-next/master)](https://circleci.com/gh/vuejs/vue-router-next)
 
-> This is the repository for Vue Router 4 (for Vue 3)
-
+> This is the repository for Vue Router 4 Extended version (for Vue 3)
+> The extension supports automatic jump to external link
 <h2 align="center">Supporting Vue Router</h2>
 
 Vue Router is part of the Vue Ecosystem and is an MIT-licensed open source project with its ongoing development made possible entirely by the support of Sponsors. If you would like to become a sponsor, please consider:
