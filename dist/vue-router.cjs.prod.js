@@ -1,6 +1,6 @@
 /*!
-  * vue-router v4.0.11
-  * (c) 2021 Eduardo San Martin Morote
+  * vue-router v4.0.14
+  * (c) 2022 Eduardo San Martin Morote
   * @license MIT
   */
 'use strict';
@@ -478,7 +478,7 @@ function useHistoryStateNavigation(base) {
          * if a base tag is provided and we are on a normal domain, we have to
          * respect the provided `base` attribute because pushState() will use it and
          * potentially erase anything before the `#` like at
-         * https://github.com/vuejs/vue-router-next/issues/685 where a base of
+         * https://github.com/vuejs/router/issues/685 where a base of
          * `/folder/#` but a base of `/` would erase the `/folder/` section. If
          * there is no host, the `<base>` tag makes no sense and if there isn't a
          * base tag we can just use everything after the `#`.
@@ -516,7 +516,7 @@ function useHistoryStateNavigation(base) {
         const currentState = assign({}, 
         // use current history state to gracefully handle a wrong call to
         // history.replaceState
-        // https://github.com/vuejs/vue-router-next/issues/366
+        // https://github.com/vuejs/router/issues/366
         historyState.value, history.state, {
             forward: to,
             scroll: computeScrollPosition(),
@@ -576,6 +576,7 @@ function createMemoryHistory(base = '') {
     let listeners = [];
     let queue = [START];
     let position = 0;
+    base = normalizeBase(base);
     function setLocation(location) {
         position++;
         if (position === queue.length) {
@@ -1307,12 +1308,13 @@ function createRouterMatcher(routes, globalOptions) {
     }
     function insertMatcher(matcher) {
         let i = 0;
-        // console.log('i is', { i })
         while (i < matchers.length &&
-            comparePathParserScore(matcher, matchers[i]) >= 0)
+            comparePathParserScore(matcher, matchers[i]) >= 0 &&
+            // Adding children with empty path should still appear before the parent
+            // https://github.com/vuejs/router/issues/1124
+            (matcher.record.path !== matchers[i].record.path ||
+                !isRecordChildOf(matcher, matchers[i])))
             i++;
-        // console.log('END i is', { i })
-        // while (i < matchers.length && matcher.score <= matchers[i].score) i++
         matchers.splice(i, 0, matcher);
         // only add the original record to the name map
         if (matcher.record.name && !isAliasRecord(matcher))
@@ -1467,6 +1469,9 @@ function mergeOptions(defaults, partialOptions) {
         options[key] = key in partialOptions ? partialOptions[key] : defaults[key];
     }
     return options;
+}
+function isRecordChildOf(record, parent) {
+    return parent.children.some(child => child === record || isRecordChildOf(record, child));
 }
 
 /**
@@ -1905,6 +1910,57 @@ function useLink(props) {
         navigate,
     };
 }
+function queryToString(query) {
+    return ('?' +
+        Object.keys(query)
+            .map(key => {
+            const value = query[key];
+            if (value == null)
+                return '';
+            if (Array.isArray(value)) {
+                return value
+                    .map(val => `${encodeURIComponent(key)}=${encodeURIComponent(val)}`)
+                    .join('&');
+            }
+            return `${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
+        })
+            .filter(Boolean)
+            .join('&'));
+}
+function paramsToHref(to) {
+    const { path, params } = to;
+    const pathParams = Object.keys(params)
+        .reduce((acc, key) => {
+        acc[key] = params[key];
+        return acc;
+    }, {});
+    const pathWithParams = path.replace(/\:(\w+)/g, (_, key) => {
+        const value = pathParams[key];
+        if (value == null)
+            return ':' + key;
+        if (Array.isArray(value)) {
+            return value
+                .map(val => encodeURIComponent(val))
+                .join('/');
+        }
+        return encodeURIComponent(value);
+    });
+    return `${pathWithParams}`;
+}
+function checkExternalLink(to) {
+    if (typeof to === 'string' && to.startsWith('http')) {
+        return { isExternalLink: true, href: to, isJavascript: false };
+    }
+    else if ((typeof to === 'string' && to.startsWith('javascript:')) || (typeof to.path === 'string' && to.path.startsWith('javascript:'))) {
+        return { isExternalLink: false, href: to, isJavascript: true };
+    }
+    else if (typeof to === 'object' && typeof to.path === 'string' && to.path.startsWith('http')) {
+        let path = typeof to.params === 'object' ? paramsToHref(to) : to.path;
+        let queryString = typeof to.query === 'object' ? queryToString(to.query) : '';
+        return { isExternalLink: true, href: path + queryString + (to.hash ? to.hash : ''), isJavascript: false };
+    }
+    return { isExternalLink: false, href: '', isJavascript: false };
+}
 const RouterLinkImpl = /*#__PURE__*/ vue.defineComponent({
     name: 'RouterLink',
     props: {
@@ -1923,14 +1979,11 @@ const RouterLinkImpl = /*#__PURE__*/ vue.defineComponent({
         },
     },
     useLink,
-    setup(props, { slots }) 
-    {
-        const isExternalLink = typeof props.to === 'string' && props.to.startsWith('http')
-        const isJavascript = typeof props.to === 'string' && props.to.startsWith('javascript:')
-        const link = !isExternalLink&&!isJavascript? vue.reactive(useLink(props)) : {href: props.to};
-       
+    setup(props, { slots }) {
         const { options } = vue.inject(routerKey);
-        const elClass = computed(() => ({
+        const { isExternalLink, href, isJavascript } = checkExternalLink(props.to);
+        const link = !isExternalLink && !isJavascript ? vue.reactive(useLink(props)) : { href: href, isActive: false, isExactActive: false, route: '', navigate: () => Promise.resolve() };
+        const elClass = vue.computed(() => ({
             [getLinkClass(props.activeClass, options.linkActiveClass, 'router-link-active')]: link.isActive,
             // [getLinkClass(
             //   props.inactiveClass,
@@ -1939,7 +1992,6 @@ const RouterLinkImpl = /*#__PURE__*/ vue.defineComponent({
             // )]: !link.isExactActive,
             [getLinkClass(props.exactActiveClass, options.linkExactActiveClass, 'router-link-exact-active')]: link.isExactActive,
         }));
-  ;
         return () => {
             const children = slots.default && slots.default(link);
             return props.custom
@@ -1953,9 +2005,9 @@ const RouterLinkImpl = /*#__PURE__*/ vue.defineComponent({
                     // the listener so we end up triggering both
                     onClick: link.navigate,
                     class: elClass.value,
-                }, children): vue.h('a', {
+                }, children) : vue.h('a', {
                     href: link.href,
-                    target: !isJavascript? "_blank": null,
+                    target: !isJavascript ? "_blank" : null,
                     class: elClass.value,
                 }, children);
         };
@@ -2235,7 +2287,7 @@ function createRouter(options) {
             // nested objects, so we keep the query as is, meaning it can contain
             // numbers at `$route.query`, but at the point, the user will have to
             // use their own type anyway.
-            // https://github.com/vuejs/vue-router-next/issues/328#issuecomment-649481567
+            // https://github.com/vuejs/router/issues/328#issuecomment-649481567
             stringifyQuery$1 === stringifyQuery
                 ? normalizeQuery(rawLocation.query)
                 : (rawLocation.query || {}),
@@ -2318,7 +2370,10 @@ function createRouter(options) {
         }
         return (failure ? Promise.resolve(failure) : navigate(toLocation, from))
             .catch((error) => isNavigationFailure(error)
-            ? error
+            ? // navigation redirects still mark the router as ready
+                isNavigationFailure(error, 2 /* NAVIGATION_GUARD_REDIRECT */)
+                    ? error
+                    : markAsReady(error) // also returns the error
             : // reject any unknown error
                 triggerError(error, toLocation, from))
             .then((failure) => {
@@ -2580,20 +2635,17 @@ function createRouter(options) {
             readyHandlers.add([resolve, reject]);
         });
     }
-    /**
-     * Mark the router as ready, resolving the promised returned by isReady(). Can
-     * only be called once, otherwise does nothing.
-     * @param err - optional error
-     */
     function markAsReady(err) {
-        if (ready)
-            return;
-        ready = true;
-        setupListeners();
-        readyHandlers
-            .list()
-            .forEach(([resolve, reject]) => (err ? reject(err) : resolve()));
-        readyHandlers.reset();
+        if (!ready) {
+            // still not ready if an error happened
+            ready = !err;
+            setupListeners();
+            readyHandlers
+                .list()
+                .forEach(([resolve, reject]) => (err ? reject(err) : resolve()));
+            readyHandlers.reset();
+        }
+        return err;
     }
     // Scroll behavior
     function handleScroll(to, from, isPush, isFirstNavigation) {

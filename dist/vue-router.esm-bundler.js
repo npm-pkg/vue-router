@@ -1,6 +1,6 @@
 /*!
-  * vue-router v4.0.11
-  * (c) 2021 Eduardo San Martin Morote
+  * vue-router v4.0.14
+  * (c) 2022 Eduardo San Martin Morote
   * @license MIT
   */
 import { getCurrentInstance, inject, onUnmounted, onDeactivated, onActivated, computed, unref, watchEffect, defineComponent, reactive, h, provide, ref, watch, shallowRef, nextTick } from 'vue';
@@ -524,7 +524,7 @@ function useHistoryStateNavigation(base) {
          * if a base tag is provided and we are on a normal domain, we have to
          * respect the provided `base` attribute because pushState() will use it and
          * potentially erase anything before the `#` like at
-         * https://github.com/vuejs/vue-router-next/issues/685 where a base of
+         * https://github.com/vuejs/router/issues/685 where a base of
          * `/folder/#` but a base of `/` would erase the `/folder/` section. If
          * there is no host, the `<base>` tag makes no sense and if there isn't a
          * base tag we can just use everything after the `#`.
@@ -565,7 +565,7 @@ function useHistoryStateNavigation(base) {
         const currentState = assign({}, 
         // use current history state to gracefully handle a wrong call to
         // history.replaceState
-        // https://github.com/vuejs/vue-router-next/issues/366
+        // https://github.com/vuejs/router/issues/366
         historyState.value, history.state, {
             forward: to,
             scroll: computeScrollPosition(),
@@ -630,6 +630,7 @@ function createMemoryHistory(base = '') {
     let listeners = [];
     let queue = [START];
     let position = 0;
+    base = normalizeBase(base);
     function setLocation(location) {
         position++;
         if (position === queue.length) {
@@ -1390,12 +1391,13 @@ function createRouterMatcher(routes, globalOptions) {
     }
     function insertMatcher(matcher) {
         let i = 0;
-        // console.log('i is', { i })
         while (i < matchers.length &&
-            comparePathParserScore(matcher, matchers[i]) >= 0)
+            comparePathParserScore(matcher, matchers[i]) >= 0 &&
+            // Adding children with empty path should still appear before the parent
+            // https://github.com/vuejs/router/issues/1124
+            (matcher.record.path !== matchers[i].record.path ||
+                !isRecordChildOf(matcher, matchers[i])))
             i++;
-        // console.log('END i is', { i })
-        // while (i < matchers.length && matcher.score <= matchers[i].score) i++
         matchers.splice(i, 0, matcher);
         // only add the original record to the name map
         if (matcher.record.name && !isAliasRecord(matcher))
@@ -1427,7 +1429,7 @@ function createRouterMatcher(routes, globalOptions) {
             // this also allows the user to control the encoding
             path = location.path;
             if ((process.env.NODE_ENV !== 'production') && !path.startsWith('/')) {
-                warn(`The Matcher cannot resolve relative paths but received "${path}". Unless you directly called \`matcher.resolve("${path}")\`, this is probably a bug in vue-router. Please open an issue at https://new-issue.vuejs.org/?repo=vuejs/vue-router-next.`);
+                warn(`The Matcher cannot resolve relative paths but received "${path}". Unless you directly called \`matcher.resolve("${path}")\`, this is probably a bug in vue-router. Please open an issue at https://new-issue.vuejs.org/?repo=vuejs/router.`);
             }
             matcher = matchers.find(m => m.re.test(path));
             // matcher should have a value after the loop
@@ -1580,6 +1582,9 @@ function checkMissingParamsInAbsolutePath(record, parent) {
         if (!record.keys.find(isSameParam.bind(null, key)))
             return warn(`Absolute path "${record.record.path}" should have the exact same param named "${key.name}" as its parent "${parent.record.path}".`);
     }
+}
+function isRecordChildOf(record, parent) {
+    return parent.children.some(child => child === record || isRecordChildOf(record, child));
 }
 
 /**
@@ -1868,7 +1873,7 @@ function onBeforeRouteLeave(leaveGuard) {
     {}).value;
     if (!activeRecord) {
         (process.env.NODE_ENV !== 'production') &&
-            warn('No active route record was found. Are you missing a <router-view> component?');
+            warn('No active route record was found when calling `onBeforeRouteLeave()`. Make sure you call this function inside of a component child of <router-view>. Maybe you called it inside of App.vue?');
         return;
     }
     registerGuard(activeRecord, 'leaveGuards', leaveGuard);
@@ -1890,7 +1895,7 @@ function onBeforeRouteUpdate(updateGuard) {
     {}).value;
     if (!activeRecord) {
         (process.env.NODE_ENV !== 'production') &&
-            warn('No active route record was found. Are you missing a <router-view> component?');
+            warn('No active route record was found when calling `onBeforeRouteUpdate()`. Make sure you call this function inside of a component child of <router-view>. Maybe you called it inside of App.vue?');
         return;
     }
     registerGuard(activeRecord, 'updateGuards', updateGuard);
@@ -2054,7 +2059,6 @@ function useLink(props) {
     const router = inject(routerKey);
     const currentRoute = inject(routeLocationKey);
     const route = computed(() => router.resolve(unref(props.to)));
-  
     const activeRecordIndex = computed(() => {
         const { matched } = route.value;
         const { length } = matched;
@@ -2092,7 +2096,6 @@ function useLink(props) {
         }
         return Promise.resolve();
     }
-
     // devtools only
     if (((process.env.NODE_ENV !== 'production') || __VUE_PROD_DEVTOOLS__) && isBrowser) {
         const instance = getCurrentInstance();
@@ -2113,7 +2116,6 @@ function useLink(props) {
             }, { flush: 'post' });
         }
     }
-
     return {
         route,
         href: computed(() => route.value.href),
@@ -2121,8 +2123,57 @@ function useLink(props) {
         isExactActive,
         navigate,
     };
-  
-  
+}
+function queryToString(query) {
+    return ('?' +
+        Object.keys(query)
+            .map(key => {
+            const value = query[key];
+            if (value == null)
+                return '';
+            if (Array.isArray(value)) {
+                return value
+                    .map(val => `${encodeURIComponent(key)}=${encodeURIComponent(val)}`)
+                    .join('&');
+            }
+            return `${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
+        })
+            .filter(Boolean)
+            .join('&'));
+}
+function paramsToHref(to) {
+    const { path, params } = to;
+    const pathParams = Object.keys(params)
+        .reduce((acc, key) => {
+        acc[key] = params[key];
+        return acc;
+    }, {});
+    const pathWithParams = path.replace(/\:(\w+)/g, (_, key) => {
+        const value = pathParams[key];
+        if (value == null)
+            return ':' + key;
+        if (Array.isArray(value)) {
+            return value
+                .map(val => encodeURIComponent(val))
+                .join('/');
+        }
+        return encodeURIComponent(value);
+    });
+    return `${pathWithParams}`;
+}
+function checkExternalLink(to) {
+    if (typeof to === 'string' && to.startsWith('http')) {
+        return { isExternalLink: true, href: to, isJavascript: false };
+    }
+    else if ((typeof to === 'string' && to.startsWith('javascript:')) || (typeof to.path === 'string' && to.path.startsWith('javascript:'))) {
+        return { isExternalLink: false, href: to, isJavascript: true };
+    }
+    else if (typeof to === 'object' && typeof to.path === 'string' && to.path.startsWith('http')) {
+        let path = typeof to.params === 'object' ? paramsToHref(to) : to.path;
+        let queryString = typeof to.query === 'object' ? queryToString(to.query) : '';
+        return { isExternalLink: true, href: path + queryString + (to.hash ? to.hash : ''), isJavascript: false };
+    }
+    return { isExternalLink: false, href: '', isJavascript: false };
 }
 const RouterLinkImpl = /*#__PURE__*/ defineComponent({
     name: 'RouterLink',
@@ -2143,12 +2194,9 @@ const RouterLinkImpl = /*#__PURE__*/ defineComponent({
     },
     useLink,
     setup(props, { slots }) {
-
-        const isExternalLink = typeof props.to === 'string' && props.to.startsWith('http')
-        const isJavascript = typeof props.to === 'string' && props.to.startsWith('javascript:')
-        const link = !isExternalLink&&!isJavascript? reactive(useLink(props)) : {href: props.to};
-       
         const { options } = inject(routerKey);
+        const { isExternalLink, href, isJavascript } = checkExternalLink(props.to);
+        const link = !isExternalLink && !isJavascript ? reactive(useLink(props)) : { href: href, isActive: false, isExactActive: false, route: '', navigate: () => Promise.resolve() };
         const elClass = computed(() => ({
             [getLinkClass(props.activeClass, options.linkActiveClass, 'router-link-active')]: link.isActive,
             // [getLinkClass(
@@ -2158,7 +2206,6 @@ const RouterLinkImpl = /*#__PURE__*/ defineComponent({
             // )]: !link.isExactActive,
             [getLinkClass(props.exactActiveClass, options.linkExactActiveClass, 'router-link-exact-active')]: link.isExactActive,
         }));
-  ;
         return () => {
             const children = slots.default && slots.default(link);
             return props.custom
@@ -2172,9 +2219,9 @@ const RouterLinkImpl = /*#__PURE__*/ defineComponent({
                     // the listener so we end up triggering both
                     onClick: link.navigate,
                     class: elClass.value,
-                }, children): h('a', {
+                }, children) : h('a', {
                     href: link.href,
-                    target: !isJavascript? "_blank": null,
+                    target: !isJavascript ? "_blank" : null,
                     class: elClass.value,
                 }, children);
         };
@@ -2327,6 +2374,24 @@ const RouterViewImpl = /*#__PURE__*/ defineComponent({
                 onVnodeUnmounted,
                 ref: viewRef,
             }));
+            if (((process.env.NODE_ENV !== 'production') || __VUE_PROD_DEVTOOLS__) &&
+                isBrowser &&
+                component.ref) {
+                // TODO: can display if it's an alias, its props
+                const info = {
+                    depth,
+                    name: matchedRoute.name,
+                    path: matchedRoute.path,
+                    meta: matchedRoute.meta,
+                };
+                const internalInstances = Array.isArray(component.ref)
+                    ? component.ref.map(r => r.i)
+                    : [component.ref.i];
+                internalInstances.forEach(instance => {
+                    // @ts-expect-error
+                    instance.__vrv_devtools = info;
+                });
+            }
             return (
             // pass the vnode to the slot as a prop.
             // h and <component :is="..."> both accept vnodes
@@ -2401,8 +2466,8 @@ function addDevtools(app, router, matcher) {
         id: 'org.vuejs.router' + (id ? '.' + id : ''),
         label: 'Vue Router',
         packageName: 'vue-router',
-        homepage: 'https://next.router.vuejs.org/',
-        logo: 'https://vuejs.org/images/icons/favicon-96x96.png',
+        homepage: 'https://router.vuejs.org',
+        logo: 'https://router.vuejs.org/logo.png',
         componentStateTypes: ['Routing'],
         app,
     }, api => {
@@ -2417,8 +2482,17 @@ function addDevtools(app, router, matcher) {
                 });
             }
         });
-        // mark router-link as active
+        // mark router-link as active and display tags on router views
         api.on.visitComponentTree(({ treeNode: node, componentInstance }) => {
+            if (componentInstance.__vrv_devtools) {
+                const info = componentInstance.__vrv_devtools;
+                node.tags.push({
+                    label: (info.name ? `${info.name.toString()}: ` : '') + info.path,
+                    textColor: 0,
+                    tooltip: 'This component is rendered by &lt;router-view&gt;',
+                    backgroundColor: PINK_500,
+                });
+            }
             // if multiple useLink are used
             if (Array.isArray(componentInstance.__vrl_devtools)) {
                 componentInstance.__devtoolsApi = api;
@@ -2468,7 +2542,7 @@ function addDevtools(app, router, matcher) {
                     title: 'Error during Navigation',
                     subtitle: to.fullPath,
                     logType: 'error',
-                    time: Date.now(),
+                    time: api.now(),
                     data: { error },
                     groupId: to.meta.__navigationId,
                 },
@@ -2489,7 +2563,7 @@ function addDevtools(app, router, matcher) {
             api.addTimelineEvent({
                 layerId: navigationsLayerId,
                 event: {
-                    time: Date.now(),
+                    time: api.now(),
                     title: 'Start of navigation',
                     subtitle: to.fullPath,
                     data,
@@ -2524,7 +2598,7 @@ function addDevtools(app, router, matcher) {
                 event: {
                     title: 'End of navigation',
                     subtitle: to.fullPath,
-                    time: Date.now(),
+                    time: api.now(),
                     data,
                     logType: failure ? 'warning' : 'default',
                     groupId: to.meta.__navigationId,
@@ -2865,8 +2939,11 @@ function createRouter(options) {
             if ((process.env.NODE_ENV !== 'production') &&
                 'params' in rawLocation &&
                 !('name' in rawLocation) &&
+                // @ts-expect-error: the type is never
                 Object.keys(rawLocation.params).length) {
-                warn(`Path "${rawLocation.path}" was passed with params but they will be ignored. Use a named route alongside params instead.`);
+                warn(`Path "${
+                // @ts-expect-error: the type is never
+                rawLocation.path}" was passed with params but they will be ignored. Use a named route alongside params instead.`);
             }
             matcherLocation = assign({}, rawLocation, {
                 path: parseURL(parseQuery$1, rawLocation.path, currentLocation.path).path,
@@ -2919,7 +2996,7 @@ function createRouter(options) {
             // nested objects, so we keep the query as is, meaning it can contain
             // numbers at `$route.query`, but at the point, the user will have to
             // use their own type anyway.
-            // https://github.com/vuejs/vue-router-next/issues/328#issuecomment-649481567
+            // https://github.com/vuejs/router/issues/328#issuecomment-649481567
             stringifyQuery$1 === stringifyQuery
                 ? normalizeQuery(rawLocation.query)
                 : (rawLocation.query || {}),
@@ -3008,7 +3085,10 @@ function createRouter(options) {
         }
         return (failure ? Promise.resolve(failure) : navigate(toLocation, from))
             .catch((error) => isNavigationFailure(error)
-            ? error
+            ? // navigation redirects still mark the router as ready
+                isNavigationFailure(error, 2 /* NAVIGATION_GUARD_REDIRECT */)
+                    ? error
+                    : markAsReady(error) // also returns the error
             : // reject any unknown error
                 triggerError(error, toLocation, from))
             .then((failure) => {
@@ -3286,20 +3366,17 @@ function createRouter(options) {
             readyHandlers.add([resolve, reject]);
         });
     }
-    /**
-     * Mark the router as ready, resolving the promised returned by isReady(). Can
-     * only be called once, otherwise does nothing.
-     * @param err - optional error
-     */
     function markAsReady(err) {
-        if (ready)
-            return;
-        ready = true;
-        setupListeners();
-        readyHandlers
-            .list()
-            .forEach(([resolve, reject]) => (err ? reject(err) : resolve()));
-        readyHandlers.reset();
+        if (!ready) {
+            // still not ready if an error happened
+            ready = !err;
+            setupListeners();
+            readyHandlers
+                .list()
+                .forEach(([resolve, reject]) => (err ? reject(err) : resolve()));
+            readyHandlers.reset();
+        }
+        return err;
     }
     // Scroll behavior
     function handleScroll(to, from, isPush, isFirstNavigation) {

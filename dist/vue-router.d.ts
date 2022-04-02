@@ -6,6 +6,8 @@ import { ComponentPublicInstance } from 'vue';
 import { ComputedRef } from 'vue';
 import { InjectionKey } from 'vue';
 import { Ref } from 'vue';
+import { UnwrapRef } from 'vue';
+import { VNode } from 'vue';
 import { VNodeProps } from 'vue';
 
 declare type Awaitable<T> = T | Promise<T>;
@@ -182,8 +184,14 @@ export declare type LocationQueryRaw = Record<string | number, LocationQueryValu
 
 /**
  * Possible values in normalized {@link LocationQuery}. `null` renders the query
- * param but without an `=`: `?isNull&isEmpty=&other=other` -> `{ isNull: null,
- * isEmpty: '', other: 'other' }`.
+ * param but without an `=`.
+ *
+ * @example
+ * ```
+ * ?isNull&isEmpty=&other=other
+ * gives
+ * `{ isNull: null, isEmpty: '', other: 'other' }`.
+ * ```
  *
  * @internal
  */
@@ -583,14 +591,14 @@ export declare interface Router {
      */
     readonly options: RouterOptions;
     /**
-     * Add a new {@link RouteRecordRaw | Route Record} as the child of an existing route.
+     * Add a new {@link RouteRecordRaw route record} as the child of an existing route.
      *
      * @param parentName - Parent Route Record where `route` should be appended at
      * @param route - Route Record to add
      */
     addRoute(parentName: RouteRecordName, route: RouteRecordRaw): () => void;
     /**
-     * Add a new {@link RouteRecordRaw | route record} to the router.
+     * Add a new {@link RouteRecordRaw route record} to the router.
      *
      * @param route - Route Record to add
      */
@@ -608,12 +616,12 @@ export declare interface Router {
      */
     hasRoute(name: RouteRecordName): boolean;
     /**
-     * Get a full list of all the {@link RouteRecord | route records}.
+     * Get a full list of all the {@link RouteRecord route records}.
      */
     getRoutes(): RouteRecord[];
     /**
-     * Returns the {@link RouteLocation | normalized version} of a
-     * {@link RouteLocationRaw | route location}. Also includes an `href` property
+     * Returns the {@link RouteLocation normalized version} of a
+     * {@link RouteLocationRaw route location}. Also includes an `href` property
      * that includes any existing `base`. By default the `currentLocation` used is
      * `route.currentRoute` and should only be overriden in advanced use cases.
      *
@@ -670,7 +678,7 @@ export declare interface Router {
      *
      * @example
      * ```js
-     * router.beforeEach(to => {
+     * router.beforeResolve(to => {
      *   if (to.meta.requiresAuth && !isAuthenticated) return false
      * })
      * ```
@@ -804,7 +812,7 @@ declare interface RouteRecordMultipleViews extends _RouteRecordBase {
 export declare type RouteRecordName = string | symbol;
 
 /**
- * Normalized version of a {@link RouteRecord | Route Record}
+ * Normalized version of a {@link RouteRecord route record}
  */
 export declare interface RouteRecordNormalized {
     /**
@@ -1001,6 +1009,9 @@ export declare const routerKey: InjectionKey<Router>;
 export declare const RouterLink: {
     new (): {
         $props: AllowedComponentProps & ComponentCustomProps & VNodeProps & RouterLinkProps;
+        $slots: {
+            default: (arg: UnwrapRef<ReturnType<typeof useLink>>) => VNode[];
+        };
     };
     /**
      * Access to `useLink()` without depending on using vue-router
@@ -1112,7 +1123,7 @@ export declare interface RouterOptions extends PathParserOptions {
      *
      * createRouter({
      *   // other options...
-     *   parse: qs.parse,
+     *   parseQuery: qs.parse,
      *   stringifyQuery: qs.stringify,
      * })
      * ```
@@ -1152,6 +1163,12 @@ export declare interface RouterScrollBehavior {
  */
 export declare const RouterView: new () => {
     $props: AllowedComponentProps & ComponentCustomProps & VNodeProps & RouterViewProps;
+    $slots: {
+        default: (arg: {
+            Component: VNode;
+            route: RouteLocationNormalizedLoaded;
+        }) => VNode[];
+    };
 };
 
 /**
@@ -1278,55 +1295,3 @@ declare type VueUseOptions<T> = {
 };
 
 export { }
-
-declare module '@vue/runtime-core' {
-  export interface ComponentCustomOptions {
-    /**
-     * Guard called when the router is navigating to the route that is rendering
-     * this component from a different route. Differently from `beforeRouteUpdate`
-     * and `beforeRouteLeave`, `beforeRouteEnter` does not have access to the
-     * component instance through `this` because it triggers before the component
-     * is even mounted.
-     *
-     * @param to - RouteLocationRaw we are navigating to
-     * @param from - RouteLocationRaw we are navigating from
-     * @param next - function to validate, cancel or modify (by redirecting) the
-     * navigation
-     */
-    beforeRouteEnter?: NavigationGuardWithThis<undefined>
-
-    /**
-     * Guard called whenever the route that renders this component has changed but
-     * it is reused for the new route. This allows you to guard for changes in
-     * params, the query or the hash.
-     *
-     * @param to - RouteLocationRaw we are navigating to
-     * @param from - RouteLocationRaw we are navigating from
-     * @param next - function to validate, cancel or modify (by redirecting) the
-     * navigation
-     */
-    beforeRouteUpdate?: NavigationGuard
-
-    /**
-     * Guard called when the router is navigating away from the current route that
-     * is rendering this component.
-     *
-     * @param to - RouteLocationRaw we are navigating to
-     * @param from - RouteLocationRaw we are navigating from
-     * @param next - function to validate, cancel or modify (by redirecting) the
-     * navigation
-     */
-    beforeRouteLeave?: NavigationGuard
-  }
-
-  export interface ComponentCustomProperties {
-    /**
-     * Normalized current location. See {@link RouteLocationNormalizedLoaded}.
-     */
-    $route: RouteLocationNormalizedLoaded
-    /**
-     * {@link Router} instance used by the application.
-     */
-    $router: Router
-  }
-}
