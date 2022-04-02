@@ -3,7 +3,6 @@
 > This is the repository for Vue Router 4 Extended version (for Vue 3)
 > The extension supports automatic jump to external link
 
----
 
 
 ## Quickstart
