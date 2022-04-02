@@ -1,58 +1,65 @@
 # @npkg/vue-router ![release candidate](https://img.shields.io/npm/v/@npkg/vue-router.svg) [![Build Status](https://img.shields.io/circleci/project/github/vuejs/vue-router/dev.svg)](https://circleci.com/gh/vuejs/vue-router) ![GitHub license](https://img.shields.io/github/license/npm-pkg/vue-router.svg) [![Vue Version](https://img.shields.io/badge/vue-<3.x.x-blue.svg)](https://vuejs.org/) [![Download](https://img.shields.io/badge/downloads-v3-green.svg)](https://codeload.github.com/npm-pkg/vue-router/zip/v3)
 
-> This is `vue-router3.0` Extended version which works only with `Vue 2.0`. For the `Vue3.0` router see the [npm-pkg/vue-router@next](https://github.com/npm-pkg/vue-router).
-> The extension supports automatic jump to external link
 
-View [Chinese document](README_CN.md)
+>这是 `vue-router3.0` 扩展版，仅适用于 `vue2.0`。有关适合 `Vue3.0` 路由器，请参阅 [@npm-pkg/vue-router@next](https://github.com/npm-pkg/vue-router).
 
-## Quickstart
+>扩展支持自动跳转到外部链接
 
-- Via CDN: `<script src="https://unpkg.com/@npkg/vue-router"></script>`
+查看 [英文文档](README.md)
 
-- Add it to an existing Vue Project:
+---
+
+
+## 快速入门
+
+- 通过CDN: `<script src="https://unpkg.com/@npkg/vue-router"></script>`
+
+- 将其添加到现有的Vue项目中:
   ```bash
   npm install @npkg/vue-router
   |
   yarn add @npkg/vue-router
   ```
 
-## Usage
+## 用法
 
-> Replace all places of  `vue-router` with `@npkg/vue-router`
+> 将所有引用 `vue-router` 的地方用  `@npkg/vue-router` 去替代
  
-###   Create routing instance
+###  创建路由实例
 
 ```js
 //# /src/router/index.js
 
 /*
- * Old code
+ * 原代码
  */
 import Vue from 'vue'
 import Router from 'vue-router'
 
 Vue.use(Router)
 
-// Create routing instance
+// 创建路由实例
 export default new Router({
   mode: 'history',
   routes: [
     ...
   ]
 })
-//---------------------------------
-// replace with the following code
-//-----------------------------------
+
+
+//----------------
+// 替换为以下代码
+//----------------
 
 
 /*
- * New code
+ * 新代码
  */
 import Vue from 'vue'
 import Router from '@npkg/vue-router'
 Vue.use(Router)
 
-// Create routing instance
+// 创建路由实例
 export default new Router({
   mode: 'history',
   routes: [
@@ -62,12 +69,12 @@ export default new Router({
 
 ```
 
->Based on the original Vue router, it additionally supports the following writing methods
+> 除了 Vue Router 原有用法，它还支持以下扩展写法
 
 
 ```html
 
-// Basic usage
+// 基础使用
 
 <router-link to="/"></router-link>
 
@@ -77,9 +84,9 @@ export default new Router({
 
 <router-link to="https://github.com/npm-pkg/vue-router?author=five-great"></router-link>
 
-<router-link to="https://github.com/npm-pkg/vue-router/tree/v3.5.3#readme"></router-link>
+<router-link to="https://github.com/npm-pkg/vue-router/tree/v4.0.15#readme"></router-link>
 
-//Advanced Usage
+//高级使用
 
 <router-link :to="{path: '/'}"></router-link>
 
@@ -97,14 +104,15 @@ export default new Router({
 
 ```
 
+
 ---
 
-Get started with the [documentation](https://v3.router.vuejs.org).
+ 去查看 [文档](https://v3.router.vuejs.org/zh/).
 
-## Contact
+## 联系
 
 > github https://github.com/npm-pkg/vue-router/tree/v3.5.3
 
-> Email fivecc@qq.com
+> 邮件 fivecc@qq.com
 
 > CSDN  [Five-菜鸟级](https://fivecc.blog.csdn.net/)

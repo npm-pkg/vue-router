@@ -1,10 +1,10 @@
 {
   "name": "@npkg/vue-router",
-  "version": "0.0.2",
+  "version": "3.5.3",
   "main": "dist/vue-router.common.js",
   "module": "dist/vue-router.esm.js",
-  "unpkg": "dist/vue-router.js",
-  "jsdelivr": "dist/vue-router.js",
+  "unpkg": "dist/vue-router.min.js",
+  "jsdelivr": "dist/vue-router.min.js",
   "sideEffects": false,
   "license": "MIT",
   "typings": "types/index.d.ts",
@@ -112,5 +112,5 @@
   "bugs": {
     "url": "https://github.com/npm-pkg/vue-router/issues"
   },
-  "homepage": "https://github.com/npm-pkg/vue-router/tree/v3.1.1#readme"
+  "homepage": "https://github.com/npm-pkg/vue-router/tree/v3.5.3#readme"
 }
