@@ -1,9 +1,9 @@
-name: v3.1.1 Package
+name: v3 Package
 
 on:
   push:
     branches:
-      - v3.1.1
+      - v3
 
 jobs:
   publish-npm:
