@@ -1,10 +1,11 @@
 # @npkg/vue-router@next [![release candidate](https://img.shields.io/npm/v/@npkg/vue-router/next.svg)](https://www.npmjs.com/package/@npkg/vue-router/v/next) [![GitHub license](https://img.shields.io/github/license/npm-pkg/vue-router.svg)](https://github.com/npm-pkg/vue-router/blob/main/LICENSE) [![Download](https://img.shields.io/badge/downloads-main-green.svg)](https://codeload.github.com/npm-pkg/vue-router/zip/main) [![Hexo Version](https://img.shields.io/badge/vue-%3E%3D%203.x.x-blue.svg)](https://vuejs.org/) 
 
-> This is the repository for Vue Router 4 Extended version (for Vue 3)
+> This is the repository for `Vue Router 4` Extended version (for `Vue 3`)  For the `Vue2.0` router see the [npm-pkg/vue-router](https://github.com/npm-pkg/vue-router/tree/v3).
 > The extension supports automatic jump to external link
 
 ---
-[中文文档](README_CN.md)
+View [Chinese document](README_CN.md)
+
 
 ## Quickstart
 

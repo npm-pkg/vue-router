@@ -1,11 +1,11 @@
 # @npkg/vue-router@next [![release candidate](https://img.shields.io/npm/v/@npkg/vue-router/next.svg)](https://www.npmjs.com/package/@npkg/vue-router/v/next) [![GitHub license](https://img.shields.io/github/license/npm-pkg/vue-router.svg)](https://github.com/npm-pkg/vue-router/blob/main/LICENSE) [![Download](https://img.shields.io/badge/downloads-main-green.svg)](https://codeload.github.com/npm-pkg/vue-router/zip/main) [![Hexo Version](https://img.shields.io/badge/vue-%3E%3D%203.x.x-blue.svg)](https://v3.cn.vuejs.org/) 
 
 
-> 这是Vue Router 4扩展版（适用于Vue 3）的存储库 
+> 这是 `Vue Router 4` 扩展版（适用于 `Vue 3` ）的存储库，有关适合 `Vue2.0` 路由器，请参阅 [@npm-pkg/vue-router](https://github.com/npm-pkg/vue-router/tree/v3)
 >
 > 扩展支持自动跳转到外部链接
 
-[🇺🇸English Document](README.md)
+查看 [英文文档](README.md)
 
 ---
 
